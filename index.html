@@ -7,7 +7,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root { --bg: #0a0a0a; --gold: #ffd700; --red: #ff4500; --pink: #f06292; --gray: #888; --green: #2ecc71; }
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; min-height: 100vh; display: flex; align-items: center; justify-content: center; transition: 0.5s; overflow-x: hidden; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; min-height: 100vh; display: flex; align-items: center; justify-content: center; transition: 0.5s; overflow-x: hidden; position: relative; }
         
         /* MENU - Ajustado a 3 columnas y centrado */
         #menu { 
@@ -18,6 +18,7 @@
             max-width: 1000px; 
             padding: 20px;
             margin: auto; /* Centrado absoluto */
+            padding-bottom: 60px; /* Espacio para la marca de agua */
         }
 
         .card { background: #151515; border: 1px solid #333; border-radius: 12px; padding: 25px; text-align: center; cursor: pointer; transition: 0.3s; }
@@ -26,7 +27,7 @@
         .card h3 { margin: 10px 0 5px 0; font-size: 1.1rem; }
 
         /* PLAYER */
-        #player { display: none; width: 90%; max-width: 400px; background: #000; padding: 25px; border-radius: 20px; border: 2px solid #333; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        #player { display: none; width: 90%; max-width: 400px; background: #000; padding: 25px; border-radius: 20px; border: 2px solid #333; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.8); transition: transform 0.3s ease; }
         .btn-back { position: absolute; top: -45px; left: 0; background: #222; border: 1px solid #444; color: #fff; cursor: pointer; padding: 8px 15px; border-radius: 5px; font-size: 0.8rem; }
         
         .cover-box { width: 100%; aspect-ratio: 1/1; background: #111; margin-bottom: 15px; border-radius: 10px; overflow: hidden; }
@@ -38,14 +39,21 @@
 
         .info { text-align: center; margin-bottom: 20px; min-height: 50px; }
         #title { font-weight: bold; font-size: 1rem; display: block; margin-bottom: 5px; color: #fff; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        #album { font-size: 0.8rem; color: #666; }
+        #album { font-size: 0.8rem; color: #666; display: block; margin-bottom: 10px; }
+        
+        /* Nuevo texto solicitado */
+        .know-now { font-size: 0.7rem; color: rgba(255,255,255,0.6); font-style: italic; letter-spacing: 1px; }
 
         .controls { display: flex; justify-content: space-around; gap: 10px; align-items: center; }
-        .controls button { background: #1a1a1a; border: 1px solid #333; color: white; padding: 15px; border-radius: 50%; cursor: pointer; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; }
+        .controls button { background: #1a1a1a; border: 1px solid #333; color: white; padding: 15px; border-radius: 50%; cursor: pointer; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .controls button:active { transform: scale(0.9); background: #222; }
         .btn-play { width: 75px !important; height: 75px !important; background: #333 !important; font-size: 1.5rem; }
 
         .vol-container { margin-top: 25px; display: flex; align-items: center; gap: 10px; color: #666; font-size: 0.8rem; }
-        #vol { flex: 1; accent-color: #555; }
+        #vol { flex: 1; accent-color: #555; cursor: pointer; }
+
+        /* Marca de agua solicitada */
+        .watermark { position: fixed; bottom: 15px; right: 20px; font-size: 0.65rem; color: rgba(255,255,255,0.2); letter-spacing: 2px; text-transform: uppercase; z-index: 10; pointer-events: none; }
 
         /* TEMAS */
         .theme-strictly { border-color: var(--red) !important; }
@@ -60,8 +68,31 @@
         .hidden { display: none !important; }
 
         /* Responsivo para móviles */
-        @media (max-width: 768px) { #menu { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 480px) { #menu { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { 
+            #menu { grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 15px; } 
+            .card { padding: 15px; }
+            .card i { font-size: 2rem; }
+            .card h3 { font-size: 1rem; }
+        }
+        
+        /* Ajustes específicos para el reproductor en móvil (más pequeño) */
+        @media (max-width: 480px) { 
+            #menu { grid-template-columns: 1fr; } 
+            
+            #player { padding: 15px; max-width: 300px; border-radius: 15px; }
+            .cover-box { margin-bottom: 10px; }
+            .info { margin-bottom: 15px; min-height: 40px; }
+            #title { font-size: 0.85rem; }
+            #album { font-size: 0.7rem; margin-bottom: 5px; }
+            .know-now { font-size: 0.6rem; }
+            
+            .controls { gap: 5px; }
+            .controls button { width: 40px; height: 40px; padding: 10px; font-size: 0.8rem; }
+            .btn-play { width: 55px !important; height: 55px !important; font-size: 1.1rem; }
+            
+            .vol-container { margin-top: 15px; font-size: 0.7rem; }
+            .btn-back { top: -40px; padding: 5px 10px; font-size: 0.7rem; }
+        }
     </style>
 </head>
 <body>
@@ -104,6 +135,7 @@
         <div class="info">
             <span id="title">CARGANDO...</span>
             <span id="album">...</span>
+           
         </div>
         
         <div class="controls">
@@ -117,11 +149,17 @@
             <input type="range" id="vol" min="0" max="1" step="0.05" value="0.7">
             <i class="fas fa-volume-up"></i>
         </div>
+         <div style="text-align: right;opacity: 0.3;">
+            <span class="know-now">and if you dont know, now you know</span>
+        </div>
     </div>
+
+    <div class="watermark">developed by jvd</div>
 
     <audio id="audio"></audio>
 
     <script>
+        // Mantenemos exactamente el mismo script original
         const audio = document.getElementById('audio');
         const pIcon = document.getElementById('p-icon');
         const seekBar = document.getElementById('seek-bar');
@@ -142,7 +180,8 @@
                 'earl-the-pearl', 'peace-fly-god', 'noise-kandy-4', 'heels-have-eyes', 'tana-talk-3',
                 'dj-mystery-y.g.c-presents-jay-z-freesstyles-collabs-unreleased', 'JAY-Z_AMERICAN_HUSTLER_REMIX', 'Ritchcraft_Presents_Jay-Z_-_The_Big_Band_Blueprint-2010', 'jay-zeezer',
                 'thug-pound-_-thug-pound_202501', 'Outlawz_-_Killuminati_2K11_Hosted_By_DJ_Smallz_and_DJ_Kay_Slay-2011', 'Andre_3000_-_3_Stacks-2010', 'Andre_3000-Alter_Ego_The_Mixtape_Presented_By_Trapaholics-Bootleg-2008-RAGEM',
-                'DJ_Delz_Presents_Biggie_Smalls_is_The_illest-MF-', 'Snoop_Dogg_-_Unreleased-2015', 'Lil_Kim_-_Lil_Kim_Season-2016', 'Nipsey_Hussle_-_Crenshaws_Finest-2015',
+                'DJ_Delz_Presents_Biggie_Smalls_is_The_illest-MF-', 'Snoop_Dogg_-_Unreleased-2015', 'Lil_Kim_-_Lil_Kim_Season-2016', 'Nipsey_Hussle_-_Crenshaws_Finest-2015', 'various-set-it-off-music-from-the-new-line-cinema-motion-picture-1996',
+                'death-row-unreleased-hits-vol.1', 'snoop-doggy-dogg-_-doggystyle-2-unreleased-album_202501',
                 'Snow_Tha_Product_-_The_Rest_Comes_Later-2015', 'G-Unit_-_Automatic_Gunfire_2003', 'Bone_Thugs-N-Harmony_-_Midwest_Warriors_2008', 'Southern_Style_DJs_-_Best_Of_Da_South_Part_4_Outkast-2008',
                 'flygod-is-an-awesome-god', 'one-day-itll-all-make-sense', 'graduation_202501', 'the-graduate_extra-credit',
                 'return-to-the-36-chambers', 'wu-tang-caln-wu-chronicles-vol-2-full-album', '05-brand-new-guy', 'DJ_Delz_and_Lil_Cease_Presents_-_Junior_Mafia_The_Lost_Files-2009',
@@ -168,17 +207,17 @@
                 'Best_Of_February_2020_Hip-Hop_Instrumentals-2020', 'Beats_By_Rhettmatic_-_The_Boom_Bap_Collection_2.0-2010',
                 'VA-P-Cutta-Street_Beats_25-Bootleg-2009-Xplode', 'peterockiniinstrumentals', 'Lil_Wayne_The_City_Is_Mine_Instrumentals_2008', 'Coast_2_Coast_Instrumentals_18-2010', 'CurrenSy_-_Weed_and_Instrumentals_3-2018',
                 'Coast_2_Coast_Instrumentals_Vol_22-2011'],
-            rnb: ['VA-DJ_Triple_Exe-The_Passion_Of_RandB_154', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_153', 'VA-DJ_E-Dub_-_GTA_RandB_Online_2-2022', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_152', 'va-dj-knucklez-secret-session-rb-16-throwback-edition-2010', 'va-dj-p-exclusivez-the-climax-rb-sensations-2010', 'va-dj-chuck-t-sexxxplicit-rb-vol.49-bootleg-2009-mixfiend', 'VA-DJ_B-Ski_-_So_Amazin_RandB_14-2021', 'va-dj-finesse-xclusive-rb-6-2009', 'VA-DJ_GxxdMuzic_-_RandB_High_3-2021', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_147', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_148', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_145', 'VA-DJ_B-Ski_-_So_Amazin_RandB_12-2020', 'VA-DJ_B-Ski_-_Exclusive_RandB_16-2020', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_139', 'VA-DJ_B-Ski_-_Exclusive_RandB_15-2020', 'VA-DJ_Koolhand_-_RandB_Renaissance_2-2020', 'VA-DJ_Jay_Rock_-_Blazin_RandB_64-2020', 'VA-DJ_B-Ski_-_Exclusive_RandB_14-2019', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_133_90s', 'VA-DJ_Cortez_and_DJ_Mellz_-_Futuristic_RandB_33-2018', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_129', 'VA-DJ_B-Ski_-_So_Amazin_RandB_10-2019', 'VA-DJ_Hektik_-_Inspired_By_The_Streets_36_RandB_Edition-2018', 'VA-DJ_Smoove_K_-_Moisture_RandB_10-2017', 'VA-DJ_Cortez_and_DJ_S.R._-_Futuristic_RandB_32-2017', 'VA-DJ_Whiteowl_-_RandB_71-2010', 'VA-DJ_Whiteowl_-_Drop_That_RandB_89-2012', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_3', 'VA-DJ_Teknikz_and_DJ_E_Sudd_-_Executive_RandB_Vol._29-2011', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_29', 'VA-DJ_Get-It-Rite_-_Nuvo_RandB_Vol_2.2-2009', 'VA-DJ_Finesse_-_Xclusive_RandB_19.9-2010', 'VA-DJ_Whiteowl_-_RandB_Pt._92-2013', 'VA-DJ_Whiteowl_-_RandB_81-2011', 'VA-DJ_Moe_Sticky_-_RandB_State_Of_Mind_38-2015', 'VA-DJ_Moe_Sticky_-_RandB_State_Of_Mind_36-2015', 'VA-DJ_Whiteowl_-_RandB_86-2012', 'VA-DJ_Finesse-RandB_Soul_Vol._5-Bootleg-2006', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_23', 'VA-DJ_Whiteowl_-_RandB_Pt._101-2014', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_49', 'VA-DJ_Whiteowl_-_Drop_That_RandB_90-2012', 'VA-DJ_Whiteowl_-_Drop_That_RandB_88-2012', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_21', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_22', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_59', 'VA-DJ_Finesse_-_RandB_Soul_Vol.6Bootleg-2006', 'VA-DJ_E-Dub_-_GTA_RandB_Online_2-2022', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_39', 'VA-Beatsnblends_Presents_-_Hip_Hop_and_RandB_Vol_200-2009', 'VA-DJ_Whiteowl_-_Drop_That_RandB_87-2012', 'DJ_Bijal-Best_Of_Aaliyah_More_Than_A_Woman-MixFiend-2007', 'DJ_Ant-Lo_-_Grown_Folks_RandB_Vol._3-2010', 'Big_Mike_-_RandB_Jumpoff-2011', 'DJ_Storm-RandB_Radio_Pt._6_Desert_Storm_South-2009', 'DJ_2Mello_-_RandB_Royalty_14_Streets_R_Us','VA-DJ_Nephew_and_Jay_Beatz_-_Bedtime_Stories_Vol._8-2023', 'royalty_202406', 'human_202406', 'year-of-the-gentleman_202406',
+            rnb: ['VA-DJ_Triple_Exe-The_Passion_Of_RandB_154', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_153', 'VA-DJ_E-Dub_-_GTA_RandB_Online_2-2022', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_152', 'va-dj-knucklez-secret-session-rb-16-throwback-edition-2010', 'va-dj-p-exclusivez-the-climax-rb-sensations-2010', 'va-dj-chuck-t-sexxxplicit-rb-vol.49-bootleg-2009-mixfiend', 'VA-DJ_B-Ski_-_So_Amazin_RandB_14-2021', 'va-dj-finesse-xclusive-rb-6-2009', 'VA-DJ_GxxdMuzic_-_RandB_High_3-2021', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_147', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_148', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_145', 'VA-DJ_B-Ski_-_So_Amazin_RandB_12-2020', 'VA-DJ_B-Ski_-_Exclusive_RandB_16-2020', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_139', 'VA-DJ_B-Ski_-_Exclusive_RandB_15-2020', 'VA-DJ_Koolhand_-_RandB_Renaissance_2-2020', 'VA-DJ_Jay_Rock_-_Blazin_RandB_64-2020', 'VA-DJ_B-Ski_-_Exclusive_RandB_14-2019', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_133_90s', 'VA-DJ_Cortez_and_DJ_Mellz_-_Futuristic_RandB_33-2018', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_129', 'VA-DJ_B-Ski_-_So_Amazin_RandB_10-2019', 'VA-DJ_Hektik_-_Inspired_By_The_Streets_36_RandB_Edition-2018', 'VA-DJ_Smoove_K_-_Moisture_RandB_10-2017', 'VA-DJ_Cortez_and_DJ_S.R._-_Futuristic_RandB_32-2017', 'VA-DJ_Whiteowl_-_RandB_71-2010', 'VA-DJ_Whiteowl_-_Drop_That_RandB_89-2012', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_3', 'VA-DJ_Teknikz_and_DJ_E_Sudd_-_Executive_RandB_Vol._29-2011', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_29', 'VA-DJ_Get-It-Rite_-_Nuvo_RandB_Vol_2.2-2009', 'VA-DJ_Finesse_-_Xclusive_RandB_19.9-2010', 'VA-DJ_Whiteowl_-_RandB_Pt._92-2013', 'VA-DJ_Whiteowl_-_RandB_81-2011', 'VA-DJ_Moe_Sticky_-_RandB_State_Of_Mind_38-2015', 'VA-DJ_Moe_Sticky_-_RandB_State_Of_Mind_36-2015', 'VA-DJ_Whiteowl_-_RandB_86-2012', 'VA-DJ_Finesse-RandB_Soul_Vol._5-Bootleg-2006', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_23', 'VA-DJ_Whiteowl_-_RandB_Pt._101-2014', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_49', 'VA-DJ_Whiteowl_-_Drop_That_RandB_90-2012', 'VA-DJ_Whiteowl_-_Drop_That_RandB_88-2012', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_21', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_22', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_59', 'VA-DJ_Finesse_-_RandB_Soul_Vol.6Bootleg-2006', 'VA-DJ_E-Dub_-_GTA_RandB_Online_2-2022', 'VA-DJ_Triple_Exe-The_Passion_Of_RandB_39', 'VA-Beatsnblends_Presents_-_Hip_Hop_and_RandB_Vol_200-2009', 'VA-DJ_Whiteowl_-_Drop_That_RandB_87-2012', 'DJ_Bijal-Best_Of_Aaliyah_More_Than_A_Woman-MixFiend-2007', 'DJ_Ant-Lo_-_Grown_Folks_RandB_Vol._3-2010', 'Big_Mike_-_RandB_Jumpoff-2011', 'DJ_Storm-RandB_Radio_Pt._6_Desert_Storm_South-2009', 'DJ_2Mello_-_RandB_Royalty_14_Streets_R_Us','VA-DJ_Nephew_and_Jay_Beatz_-_Bedtime_Stories_Vol._8-2023', 'royalty_202406', 'human_202406', 'year-of-the-gentleman_202406', 'cazzu-una-nina-inutil-ep-2020',
                 'as-i-am_202406', 'non-fiction', 'ciara_202405', 'til-the-morning', 'libra-scale', 'woman_202503', 'here_20250112',
                 'fantasy-ride', 'basic-instinct', 'big_20240713', 'hard-ii-love', 'incomparable_202406', 'code-red',
                 'two-eleven', 'faithfully_202511', 'non-fiction', '17-futura-free_20240106', 'indrupendence-day', 'hadows-diamonds_202509',
                 'alright-still_202411', 'all-of-me_202406', 'free-tc', 'VA-DJ_Teknikz_and_DJ_E.Sudd_-_Executive_RandB_33-2012'],
-            tapes: ['a-lo-cubano-album', 'emigrante-album', 'lil-supa-creole', 'lilsupa-yeyo', 'lil-supa-serio', 'valencias-finest-the-mixtape-mixtape', 'los-pajaros-no-pueden-vivir-en-el-agua-porque-no-son-peces-album', 'maleza-album', '05-c.-tangana-diez-anos-versos-perfectos.com', 'espiritu-de-nuestro-tiempo-cd','tiempo-al-tiempo-mixtape', 'con-tierra-en-los-bolsillos-album', 'tu-me-la-shupas-mixtape', '23-me-muevo-con-dios', 'elphomega-ciclo-truly-yours', 'ElphomegaTheF2eelance', 'la-call-en-demo-demo', 'decimoctavo-mixtape', 'chill-trill-ep', '12-bien-guay', '1015mixtapectangana', 'gancho-perfecto-album', 'siempre-cd', 'mi-fortuna', 'a.d.r.o.m.i.c.f.m.s-2-mixtape', 'c.-tangana-antes-de-morirme-feat.-rosalia-video-mp-3-128-k', 'c.-tangana-y-baboon-cakes-www.hhgroups.com', 'supernova-lpgc-mixtape', 'agorazein-planes-audio-oficial-mp-3-70-k', 'after-hour-gran-canaria-mixtape', 'all-black-mixtape', 'd.e.p-maxi', 'elphomega-nebuloso', 'elphomega-phantom-pop', 'elphomega-el-testimonio-libra', 'madrid-zona-bruta-album', 'pirdula-ep', 'sencillo-y-en-silencio-mixtape-recopilatoria', 'la-selva-album', 'tote-king-uno-contra-20-mcs', 'mucho-muchacho-y-cookin-soul-cookin-bananas-2011', 'bejo-cookin-soul-tripi-hapa', 'monaly-gluekids-smooth-dudes-with-the-gangsta-groove', 'rapp-gotti-ontherun-the-lamb-the-tiger', 'rapp-gotti-ontherun-raised-by-the-wolves-deluxe-edition-mugrientos-evangeli', 'rapp-gotti-jay-trama-guaranteed-fresh', 'pablic-s.-pfff', 'pablic-s.-flores', 'pablic-s.-jocbeats-los-cerdos-no-pueden-mirar-al-cielo', 'cookin-soul-kid-frankie-showtime', '9.-agorazein-explicame-audio-oficial', 'MALIGNO001', 'maligno-019', 'MALIGNO002_', 'loves_202105', 'yung-beef-singles-vol7', 'morodo-ozmlstayl', 'tremendovidalogia', 'rapp-gotti-bishop-one-kind-of-blue-album', 'NWiseAllahCasinoChips', 'rapp-gotti-ontherun-hermetica', 'monaly-juice', 'cookin-soul-tapas-vol.-1', 'cookin-soul-tapas-vol.-2', 'elphomega-el-testimonio-libra', 'mp3-Falsalarma-Playlist', 'ninguna-mujer-tiene-dueno-porque-ella',
+            tapes: ['a-lo-cubano-album', 'emigrante-album', 'lil-supa-creole', 'lilsupa-yeyo', 'lil-supa-serio', 'valencias-finest-the-mixtape-mixtape', 'los-pajaros-no-pueden-vivir-en-el-agua-porque-no-son-peces-album', 'maleza-album', '05-c.-tangana-diez-anos-versos-perfectos.com', 'espiritu-de-nuestro-tiempo-cd', 'tiempo-al-tiempo-mixtape', 'con-tierra-en-los-bolsillos-album', 'tu-me-la-shupas-mixtape', '23-me-muevo-con-dios', 'elphomega-ciclo-truly-yours', 'ElphomegaTheF2eelance', 'la-call-en-demo-demo', 'decimoctavo-mixtape', 'chill-trill-ep', '12-bien-guay', '1015mixtapectangana', 'gancho-perfecto-album', 'siempre-cd', 'mi-fortuna', 'a.d.r.o.m.i.c.f.m.s-2-mixtape', 'c.-tangana-antes-de-morirme-feat.-rosalia-video-mp-3-128-k', 'c.-tangana-y-baboon-cakes-www.hhgroups.com', 'supernova-lpgc-mixtape', 'agorazein-planes-audio-oficial-mp-3-70-k', 'after-hour-gran-canaria-mixtape', 'all-black-mixtape', 'd.e.p-maxi', 'elphomega-nebuloso', 'elphomega-phantom-pop', 'elphomega-el-testimonio-libra', 'madrid-zona-bruta-album', 'pirdula-ep', 'sencillo-y-en-silencio-mixtape-recopilatoria', 'la-selva-album', 'tote-king-uno-contra-20-mcs', 'mucho-muchacho-y-cookin-soul-cookin-bananas-2011', 'bejo-cookin-soul-tripi-hapa', 'monaly-gluekids-smooth-dudes-with-the-gangsta-groove', 'rapp-gotti-ontherun-the-lamb-the-tiger', 'rapp-gotti-ontherun-raised-by-the-wolves-deluxe-edition-mugrientos-evangeli', 'rapp-gotti-jay-trama-guaranteed-fresh', 'pablic-s.-pfff', 'pablic-s.-flores', 'pablic-s.-jocbeats-los-cerdos-no-pueden-mirar-al-cielo', 'cookin-soul-kid-frankie-showtime', '9.-agorazein-explicame-audio-oficial', 'MALIGNO001', 'maligno-019', 'MALIGNO002_', 'loves_202105', 'yung-beef-singles-vol7', 'morodo-ozmlstayl', 'tremendovidalogia', 'rapp-gotti-bishop-one-kind-of-blue-album', 'NWiseAllahCasinoChips', 'rapp-gotti-ontherun-hermetica', 'monaly-juice', 'cookin-soul-tapas-vol.-1', 'cookin-soul-tapas-vol.-2', 'elphomega-el-testimonio-libra', 'mp3-Falsalarma-Playlist', 'ninguna-mujer-tiene-dueno-porque-ella',
                 'rapsusklei-elipsis', 'rapsusklei-curso-basico-de-poesia', 'rapsusklei-hijos-de-puta-para-todo',
                 'rapsusklei-la-historia-mas-real-de-vuestras-vidas', 'perroscallejeros-0', 'FOYONE_El_Patio', 'foyone-la-jaula-de-oro-2015',
                 'fill-black-fill-project-2001', 'quilate-boom-bap-2018', 'rels-change-or-die-2014_202110', 'rels-b-player-hater-2015',
                 'pablic-s.-dj-koo-un-cadaver-exquisito', 'pablic-s.-underdog', 'rapp-gotti-coldwave-subzero', 
-                'lebleu-johnny-doc-rapp-gotti-blue-magic', '17-outro', 'yako-colabos'],
+                'lebleu-johnny-doc-rapp-gotti-blue-magic', '17-outro', 'yako-colabos', 'c.-tangana-idolo-2017'],
             dancehall: ['FULLYACTIVEMIXTAPE', 'Mavado-TheGoodsbestOfMavado2cd', 'dj-s1-dancehall-mix-august-2023', 'VybzKartel-KingOfTheDancehall', 'StrictlyTheBestVol.50', 'dj-wass-dancehall-style-2022', 'DancehallAnthemsVol.1', 'ZJLiquid-FullEnzMixtape', 'dj-dotcom-dancehall-mix-2021', 'DancehallHitsVol.4', 'Dancehall-Foundation-Vol-1', 'ReggaeDancehallMix2020', 'MajorLazer-LazerStrikesBackVol1', 'Popcaan-YiyChangeMixtape', 'Chronixx-RootsAndChalice', 'MajorLazer-PeaceIsTheMission', 'BeenieMan-KingInnaDeDancehall', 'DJ-Puffy-Dancehall-Mix-2019', 'BestOfDancehall2018', 'Dancehall-Explosion-90s', 'VA-DJ_Madbwoy_-_Dancehall_Mixtape_Vol._9-2019', 'throatgoatmixtape', 'summerravept2', 'badgyaljadexshenseeamixtape', 'doveymagnumxspicemixtape', 'skengxalkalinemixtape', 'dancehallbadnessmixtape', 'EXCELBLACKIAMBLESSMIXTAPE', 
                 'MOSTVIEWEDSKENGSONGSMIXTAPE', 'boobastarrskysetting_', 'DJ_Rondon_-_Dancehall_Reggae_Vol._35', 
                 'DJ_Rondon_-_Dancehall_Reggae_77-2011', 'VA-DJ_Cabezon_-_Dancehall_Reggae_Classics-2019', 
@@ -209,11 +248,9 @@ async function playNext() {
             id = l[Math.floor(Math.random()*l.length)];
         }
 
-        // OPTIMIZACIÓN: Solo pedimos 'files' y 'metadata' para ahorrar ancho de banda y CPU
         const res = await fetch(`https://archive.org/metadata/${id}`);
         const data = await res.json();
 
-        // FILTRO DE SEGURIDAD: Si el álbum es ridículamente grande, saltamos al siguiente
         if (!data.files || data.files.length > 150) {
             console.warn("Álbum demasiado pesado o corrupto, saltando...");
             return playNext();
@@ -221,7 +258,7 @@ async function playNext() {
 
         const mp3s = data.files.filter(f => 
             f.name.toLowerCase().endsWith('.mp3') && 
-            !f.name.toLowerCase().includes('vbr') // Evitamos duplicados de bajo bitrate
+            !f.name.toLowerCase().includes('vbr')
         );
 
         if (!mp3s.length) throw "No hay MP3s";
@@ -230,7 +267,7 @@ async function playNext() {
         const trackData = {
             title: (track.title || track.name).toUpperCase().replace(/_/g, ' ').replace('.MP3', ''),
             album: (data.metadata.title || "Archive Radio").toUpperCase(),
-            url: `https://archive.org/download/${id}/${encodeURIComponent(track.name)}`, // encodeURIComponent evita errores con espacios
+            url: `https://archive.org/download/${id}/${encodeURIComponent(track.name)}`,
             cover: `https://archive.org/services/img/${id}`
         };
 
