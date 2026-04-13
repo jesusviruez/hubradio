@@ -189,7 +189,7 @@
     </div>
 
     <div class="watermark">developed by jvd</div>
-    <audio id="audio"></audio>
+    <audio id="audio" preload="auto" crossorigin="anonymous"></audio>
 
     <script>
         const audio = document.getElementById('audio');
@@ -246,7 +246,7 @@
 'wolf-on-wall-street-2', 'nodega', 'monkey-barz', '10.-sing-about-me-im-dying-of-thirst-songs-lover.com', 'casino-baby-keem', 'topimpabutterfly-kendricklamar', 'gnx-kendricklamar', 'organized-konfusion', 'the-listening', 'lb-cant-win-for-losing-blend-tape',
 'phonte-charity-starts-at-home', '09-method-man', 'theinfamousmobbdeep1995', '36-reasons', 'apollo-kids', 'larry-june-x-sledgren-sock-it-to-me-pt.-2', '04.-brick-fees', 'pi-ata-pd9nln', 'the-alchemistfreddie-gibbs_alfredo2',
 'life-after-death-b.i.g.', 'speakerboxxx_the-love-below', 'totally-krossed-out', 'kris-kross-young-rich-and-dangerous-1996',
-'13-blueprint-momma-loves-me_202604', 'wale-back-to-feature', '30.-logic-sayonara', 'street-hop'
+'13-blueprint-momma-loves-me_202604', 'wale-back-to-feature', '30.-logic-sayonara', 'street-hop', 'Unrestricted'
             ],
             beats: ['j-armz-araab-muzik-how-to-be-an-mc', 'VA-J._Armz-How_To_Be_An_MC_51-Bootleg-2008-C4', 'hip-dozer-hip-dozer-vol.-7',
             'cookin-soul-jinsang-boa-bunda', 'cookin-soul-tripi-hapa-beats', 'cookin-soul-bonafide-beats', 'cookin-soul-eterno-tumbao-instrumentals', 'cookin-soul-doom-tribute-beats', 'jazz-spastiks-mindmaze-instrumentals', 'jazz-spastiks-scratch-sniff',
@@ -355,6 +355,13 @@
                 history.push(t);
                 historyIndex = history.length - 1;
             }
+            if ('mediaSession' in navigator) {
+              navigator.mediaSession.metadata = new MediaMetadata({
+                title: t.title,
+                artist: t.album,
+                artwork: [{ src: t.cover, sizes: '512x512', type: 'image/png' }]
+            });
+        }
         }
 
         // --- SOLUCIÓN AL PROBLEMA DEL BOTÓN PLAY/PAUSE ---
@@ -375,14 +382,22 @@
             if (audio.duration) {
                 seekBar.max = Math.floor(audio.duration);
                 seekBar.value = Math.floor(audio.currentTime);
-                if (audio.duration - audio.currentTime < 30 && !nextTrackBuffer) prepareBuffer();
+                
+                // Cambiamos de 30 a 60 segundos para dar más tiempo al servidor de Archive
+                if (audio.duration - audio.currentTime < 60 && !nextTrackBuffer) {
+                    prepareBuffer();
+                }
             }
         };
 
         seekBar.oninput = () => { audio.currentTime = seekBar.value; };
         document.getElementById('vol').oninput = (e) => audio.volume = e.target.value;
         audio.onended = playNext;
-        audio.onerror = playNext;
+        audio.onerror = () => {
+            console.log("Error de carga, reintentando...");
+            nextTrackBuffer = null; // Limpiamos buffer corrupto
+            playNext(); // Forzamos el siguiente
+        };
         // Función para abrir/cerrar el listado
 function toggleAlbumList() {
     const overlay = document.getElementById('album-list-overlay');
