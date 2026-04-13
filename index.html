@@ -189,7 +189,8 @@
     </div>
 
     <div class="watermark">developed by jvd</div>
-    <audio id="audio" preload="auto" crossorigin="anonymous"></audio>
+
+    <audio id="audio" preload="auto" crossorigin="anonymous" importance="high"></audio>
 
     <script>
         const audio = document.getElementById('audio');
@@ -246,7 +247,8 @@
 'wolf-on-wall-street-2', 'nodega', 'monkey-barz', '10.-sing-about-me-im-dying-of-thirst-songs-lover.com', 'casino-baby-keem', 'topimpabutterfly-kendricklamar', 'gnx-kendricklamar', 'organized-konfusion', 'the-listening', 'lb-cant-win-for-losing-blend-tape',
 'phonte-charity-starts-at-home', '09-method-man', 'theinfamousmobbdeep1995', '36-reasons', 'apollo-kids', 'larry-june-x-sledgren-sock-it-to-me-pt.-2', '04.-brick-fees', 'pi-ata-pd9nln', 'the-alchemistfreddie-gibbs_alfredo2',
 'life-after-death-b.i.g.', 'speakerboxxx_the-love-below', 'totally-krossed-out', 'kris-kross-young-rich-and-dangerous-1996',
-'13-blueprint-momma-loves-me_202604', 'wale-back-to-feature', '30.-logic-sayonara', 'street-hop', 'Unrestricted'
+'13-blueprint-momma-loves-me_202604', 'wale-back-to-feature', '30.-logic-sayonara', 'street-hop', 'Unrestricted', 'graduation-kanye-west_202604',
+'nas-illmatic_202604', 'the_st_valentines_day_massacre', 'beg-for-mercy-no-mercy-edition-2025-fan-album', 'animal-ambition-an-untamed-desire-to-win', 'before-i-self-destruct'
             ],
             beats: ['j-armz-araab-muzik-how-to-be-an-mc', 'VA-J._Armz-How_To_Be_An_MC_51-Bootleg-2008-C4', 'hip-dozer-hip-dozer-vol.-7',
             'cookin-soul-jinsang-boa-bunda', 'cookin-soul-tripi-hapa-beats', 'cookin-soul-bonafide-beats', 'cookin-soul-eterno-tumbao-instrumentals', 'cookin-soul-doom-tribute-beats', 'jazz-spastiks-mindmaze-instrumentals', 'jazz-spastiks-scratch-sniff',
@@ -345,6 +347,11 @@
         }
 
         function applyTrack(t) {
+
+            navigator.mediaSession.setActionHandler('nexttrack', playNext);
+            navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+            // Esto mantiene la conexión viva al interactuar con el sistema
+
             document.getElementById('title').innerText = t.title;
             document.getElementById('album').innerText = t.album;
             document.getElementById('cover').src = t.cover;
@@ -392,7 +399,26 @@
 
         seekBar.oninput = () => { audio.currentTime = seekBar.value; };
         document.getElementById('vol').oninput = (e) => audio.volume = e.target.value;
-        audio.onended = playNext;
+       audio.onended = playNext;
+        // Detecta cuando el audio se detiene por falta de datos (Buffer vacío)
+        audio.onstalled = () => {
+            console.warn("Buffer vacío o conexión perdida, intentando re-conectar...");
+            // Pequeño truco: si hay datos cargados pero se paró, intentamos play. 
+            // Si no, forzamos recarga del recurso actual para despertar la conexión.
+            if (audio.readyState >= 2) {
+                audio.play();
+            } else {
+                const currentPos = audio.currentTime;
+                audio.load(); 
+                audio.currentTime = currentPos;
+                audio.play().catch(() => {});
+            }
+        };
+
+        // También es recomendable añadir 'onwaiting' para móviles
+        audio.onwaiting = () => {
+            console.log("Esperando datos del servidor...");
+};
         audio.onerror = () => {
             console.log("Error de carga, reintentando...");
             nextTrackBuffer = null; // Limpiamos buffer corrupto
