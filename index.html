@@ -493,22 +493,39 @@ async function selectAlbum(id) {
     try {
         const res = await fetch(`https://archive.org/metadata/${id}`);
         const data = await res.json();
-        const mp3s = data.files.filter(f => f.name.toLowerCase().endsWith('.mp3') && !f.name.toLowerCase().includes('vbr') && f.source === 'original');
+        
+        // RELAJAMOS EL FILTRO: Quitamos 'f.source === original' para mayor compatibilidad
+        const mp3s = data.files.filter(f => 
+            f.name.toLowerCase().endsWith('.mp3') && 
+            !f.name.toLowerCase().includes('vbr')
+        );
 
-        if (mp3s.length) {
+        if (mp3s && mp3s.length > 0) {
             const track = mp3s[Math.floor(Math.random() * mp3s.length)];
+            
+            // 1. Aplicamos los datos visuales
             applyTrack({
                 title: (track.title || track.name).toUpperCase().replace(/_/g, ' ').replace('.MP3', ''),
                 album: (data.metadata.title || "Archive Radio").toUpperCase(),
                 url: `https://archive.org/download/${id}/${encodeURIComponent(track.name)}`,
                 cover: `https://archive.org/services/img/${id}`
             });
-            // Al terminar esta canción, playNext() seguirá funcionando con la lógica aleatoria normal
+
+            // 2. FORZAMOS LA REPRODUCCIÓN (Asegúrate de que 'p' o 'audio' sea tu variable del reproductor)
+            const player = document.getElementById('audio'); 
+            if (player) {
+                player.play().catch(e => console.log("Auto-play bloqueado por el navegador"));
+            }
+
+            // 3. Preparamos la siguiente canción
             prepareBuffer(); 
+        } else {
+            throw new Error("No se encontraron archivos MP3 válidos en este álbum");
         }
     } catch (e) {
         console.error("Error cargando álbum seleccionado", e);
-        playNext();
+        document.getElementById('title').innerText = "ERROR AL CARGAR";
+        setTimeout(() => playNext(), 2000); // Si falla, que salte a otra cosa tras 2 segundos
     }
 }
     </script>
