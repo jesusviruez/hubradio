@@ -449,40 +449,57 @@ loadExternalDB();
             playNext(); // Forzamos el siguiente
         };
         // Función para abrir/cerrar el listado
+// Función para abrir/cerrar el listado
 function toggleAlbumList() {
     const overlay = document.getElementById('album-list-overlay');
-    const grid = document.getElementById('album-grid');
     
     if (overlay.style.display === 'flex') {
         overlay.style.display = 'none';
     } else {
-        
         overlay.style.display = 'flex';
         document.getElementById('list-category-title').innerText = "BIBLIOTECA " + currentMode.toUpperCase();
-        
-        grid.innerHTML = '';
-        if (currentMode === 'mixtapes') {
-            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #555; padding: 40px;">MODO ALEATORIO GLOBAL ACTIVO</div>';
-            return;
-        }
-
-       const reversedAlbums = DB[currentMode].slice().reverse();
-
-        reversedAlbums.forEach(id => {
-            const item = document.createElement('div');
-            item.className = 'album-item';
-            item.onclick = (e) => { e.stopPropagation(); selectAlbum(id); };
-            
-            // Limpieza de nombre: quitamos la fecha final y cambiamos guiones por espacios
-            let cleanName = id.split('_')[0].replace(/-/g, ' ');
-            
-            item.innerHTML = `
-                <img src="https://archive.org/services/img/${id}" loading="lazy" onerror="this.src='https://archive.org/services/img/hiphopmixtapes'">
-                <span class="album-name">${cleanName}</span>
-            `;
-            grid.appendChild(item);
-        });
+        // Llamamos a la función de renderizado normal (sin aleatorio de inicio)
+        renderAlbumGrid(false);
     }
+}
+
+// Nueva función para renderizar la cuadrícula (con opción a random)
+function renderAlbumGrid(isRandom = false) {
+    const grid = document.getElementById('album-grid');
+    grid.innerHTML = '';
+
+    if (currentMode === 'mixtapes') {
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #555; padding: 40px;">MODO ALEATORIO GLOBAL ACTIVO</div>';
+        return;
+    }
+
+    // Copiamos el array de la base de datos
+    let albumsToShow = [...DB[currentMode]];
+
+    if (isRandom) {
+        // Algoritmo de desordenado (Fisher-Yates)
+        albumsToShow.sort(() => Math.random() - 0.5);
+    } else {
+        // Por defecto, los más nuevos primero (reverse)
+        albumsToShow.reverse();
+    }
+
+    albumsToShow.forEach(id => {
+        const item = document.createElement('div');
+        item.className = 'album-item';
+        item.onclick = (e) => { e.stopPropagation(); selectAlbum(id); };
+        
+        let cleanName = id.split('_')[0].replace(/-/g, ' ');
+        
+        item.innerHTML = `
+            <img src="https://archive.org/services/img/${id}" loading="lazy" onerror="this.src='https://archive.org/services/img/hiphopmixtapes'">
+            <span class="album-name">${cleanName}</span>
+        `;
+        grid.appendChild(item);
+    });
+
+    // Scroll al principio al re-ordenar
+    grid.scrollTo(0, 0);
 }
 
 // Función para forzar que suene un álbum específico
@@ -531,12 +548,17 @@ async function selectAlbum(id) {
     </script>
 <div id="album-list-overlay" onclick="if(event.target === this) toggleAlbumList()">
     <div class="album-container">
-        <div class="list-header">
-            <span id="list-category-title" style="font-weight: bold; font-size: 0.9rem; color: var(--gold); text-transform: uppercase; padding-left: 15px;"></span>
-            <button onclick="toggleAlbumList()" style="background: #333; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; margin: 10px;">
-                <i class="fas fa-times"></i> CERRAR
-            </button>
-        </div>
+<div class="list-header">
+    <span id="list-category-title" style="font-weight: bold; font-size: 0.9rem; color: var(--gold); text-transform: uppercase; padding-left: 15px;"></span>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <button onclick="renderAlbumGrid(true)" style="background: #222; color: var(--gold); border: 1px solid #444; padding: 8px 12px; border-radius: 6px; font-size: 0.7rem; cursor: pointer;">
+            <i class="fas fa-random"></i> MIX
+        </button>
+        <button onclick="toggleAlbumList()" style="background: #333; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-size: 0.7rem; cursor: pointer;">
+            <i class="fas fa-times"></i> CERRAR
+        </button>
+    </div>
+</div>
         <div style="text-align: center;">
             <span style="text-align: center;font-size: 0.8em; ">Haz clic en un álbum para reproducir una de sus canciones
 </span>
