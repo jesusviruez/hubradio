@@ -404,6 +404,7 @@ async function playNext() {
                 artist: t.album,
                 artwork: [{ src: t.cover, sizes: '512x512', type: 'image/png' }]
             });
+                navigator.mediaSession.playbackState = "playing";
         }
         }
 
@@ -435,7 +436,14 @@ async function playNext() {
 
         seekBar.oninput = () => { audio.currentTime = seekBar.value; };
         document.getElementById('vol').oninput = (e) => audio.volume = e.target.value;
-       audio.onended = playNext;
+     audio.onended = () => {
+    console.log("Canción terminada, saltando...");
+    // Forzamos un estado de reproducción aunque sea silencio para que el sistema no cierre el hilo
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = "playing";
+    }
+    playNext();
+};
         // Detecta cuando el audio se detiene por falta de datos (Buffer vacío)
         audio.onstalled = () => {
             console.warn("Buffer vacío o conexión perdida, intentando re-conectar...");
