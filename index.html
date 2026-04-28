@@ -193,6 +193,8 @@
     <audio id="audio" preload="auto" crossorigin="anonymous" importance="high"></audio>
 
     <script>
+        let albumQueue = []; 
+let isAlbumMode = false;
         const audio = document.getElementById('audio');
         const pIcon = document.getElementById('p-icon');
         const seekBar = document.getElementById('seek-bar');
@@ -353,18 +355,28 @@ loadExternalDB();
             } catch (e) { return getNextTrackData(); }
         }
 
-        async function playNext() {
-            if (nextTrackBuffer) {
-                applyTrack(nextTrackBuffer);
-                nextTrackBuffer = null;
-                prepareBuffer();
-                return;
-            }
-            document.getElementById('title').innerText = "CONECTANDO...";
-            const data = await getNextTrackData();
-            applyTrack(data);
-            prepareBuffer();
-        }
+async function playNext() {
+    // Si hay canciones en la cola del álbum, las toca
+    if (isAlbumMode && albumQueue.length > 0) {
+        applyTrack(albumQueue.shift());
+        return;
+    }
+
+    // Si se acaba el álbum o no estábamos en ese modo, vuelve a la radio normal
+    isAlbumMode = false;
+
+    if (nextTrackBuffer) {
+        applyTrack(nextTrackBuffer);
+        nextTrackBuffer = null;
+        prepareBuffer();
+        return;
+    }
+    
+    document.getElementById('title').innerText = "CONECTANDO...";
+    const data = await getNextTrackData();
+    applyTrack(data);
+    prepareBuffer();
+}
 
         async function prepareBuffer() {
             nextTrackBuffer = await getNextTrackData();
@@ -473,76 +485,81 @@ function renderAlbumGrid(isRandom = false) {
         return;
     }
 
-    // Copiamos el array de la base de datos
     let albumsToShow = [...DB[currentMode]];
-
-    if (isRandom) {
-        // Algoritmo de desordenado (Fisher-Yates)
-        albumsToShow.sort(() => Math.random() - 0.5);
-    } else {
-        // Por defecto, los más nuevos primero (reverse)
-        albumsToShow.reverse();
-    }
+    if (isRandom) albumsToShow.sort(() => Math.random() - 0.5);
+    else albumsToShow.reverse();
 
     albumsToShow.forEach(id => {
         const item = document.createElement('div');
         item.className = 'album-item';
-        item.onclick = (e) => { e.stopPropagation(); selectAlbum(id); };
+        item.style.position = 'relative'; 
         
         let cleanName = id.split('_')[0].replace(/-/g, ' ');
         
         item.innerHTML = `
-            <img src="https://archive.org/services/img/${id}" loading="lazy" onerror="this.src='https://archive.org/services/img/hiphopmixtapes'">
-            <span class="album-name">${cleanName}</span>
+            <div style="position: relative; overflow: hidden; border-radius: 8px; cursor: pointer;">
+                <div style="position: relative;" onclick="selectAlbum('${id}', false)">
+                    <img src="https://archive.org/services/img/${id}" loading="lazy" 
+                         style="display: block; width: 100%;"
+                         onerror="this.src='https://archive.org/services/img/hiphopmixtapes'">
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+                        <span style="color: white; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 4px;">
+                           <i class="fas fa-shuffle"></i> Play Random
+                        </span>
+                    </div>
+                </div>
+
+                <div onclick="selectAlbum('${id}', true)" 
+                     style="background: var(--gold); color: black; padding: 6px 0; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold; border-top: 1px solid rgba(0,0,0,0.1); cursor: pointer; transition: background 0.2s;"
+                     onmouseover="this.style.background='#e6c200'" onmouseout="this.style.background='var(--gold)'">
+                     <i class="fas fa-play" style="font-size: 0.6rem; margin-right: 5px;"></i> PLAY FULL ALBUM
+                </div>
+            </div>
+            <span class="album-name" style="margin-top: 8px; display: block;">${cleanName}</span>
         `;
         grid.appendChild(item);
     });
-
-    // Scroll al principio al re-ordenar
     grid.scrollTo(0, 0);
 }
 
 // Función para forzar que suene un álbum específico
-async function selectAlbum(id) {
-    toggleAlbumList(); // Cerrar menú
-    document.getElementById('title').innerText = "CARGANDO ÁLBUM...";
+async function selectAlbum(id, playFullAlbum = false) {
+    toggleAlbumList(); 
+    document.getElementById('title').innerText = "CARGANDO...";
     
     try {
         const res = await fetch(`https://archive.org/metadata/${id}`);
         const data = await res.json();
-        
-        // RELAJAMOS EL FILTRO: Quitamos 'f.source === original' para mayor compatibilidad
-        const mp3s = data.files.filter(f => 
-            f.name.toLowerCase().endsWith('.mp3') && 
-            !f.name.toLowerCase().includes('vbr')
-        );
+        const mp3s = data.files.filter(f => f.name.toLowerCase().endsWith('.mp3') && !f.name.toLowerCase().includes('vbr'));
 
-        if (mp3s && mp3s.length > 0) {
-            const track = mp3s[Math.floor(Math.random() * mp3s.length)];
-            
-            // 1. Aplicamos los datos visuales
-            applyTrack({
-                title: (track.title || track.name).toUpperCase().replace(/_/g, ' ').replace('.MP3', ''),
-                album: (data.metadata.title || "Archive Radio").toUpperCase(),
-                url: `https://archive.org/download/${id}/${encodeURIComponent(track.name)}`,
-                cover: `https://archive.org/services/img/${id}`
-            });
-
-            // 2. FORZAMOS LA REPRODUCCIÓN (Asegúrate de que 'p' o 'audio' sea tu variable del reproductor)
-            const player = document.getElementById('audio'); 
-            if (player) {
-                player.play().catch(e => console.log("Auto-play bloqueado por el navegador"));
+        if (mp3s.length > 0) {
+            if (playFullAlbum) {
+                // MODO ÁLBUM COMPLETO
+                isAlbumMode = true;
+                albumQueue = mp3s.map(track => ({
+                    title: (track.title || track.name).toUpperCase().replace(/_/g, ' ').replace('.MP3', ''),
+                    album: (data.metadata.title || "Archive Radio").toUpperCase(),
+                    url: `https://archive.org/download/${id}/${encodeURIComponent(track.name)}`,
+                    cover: `https://archive.org/services/img/${id}`
+                }));
+                applyTrack(albumQueue.shift());
+            } else {
+                // MODO NORMAL (Una sola canción y sigue la radio)
+                isAlbumMode = false;
+                albumQueue = [];
+                const track = mp3s[Math.floor(Math.random() * mp3s.length)];
+                applyTrack({
+                    title: (track.title || track.name).toUpperCase().replace(/_/g, ' ').replace('.MP3', ''),
+                    album: (data.metadata.title || "Archive Radio").toUpperCase(),
+                    url: `https://archive.org/download/${id}/${encodeURIComponent(track.name)}`,
+                    cover: `https://archive.org/services/img/${id}`
+                });
+                prepareBuffer(); 
             }
-
-            // 3. Preparamos la siguiente canción
-            prepareBuffer(); 
-        } else {
-            throw new Error("No se encontraron archivos MP3 válidos en este álbum");
         }
     } catch (e) {
-        console.error("Error cargando álbum seleccionado", e);
-        document.getElementById('title').innerText = "ERROR AL CARGAR";
-        setTimeout(() => playNext(), 2000); // Si falla, que salte a otra cosa tras 2 segundos
+        console.error(e);
+        playNext();
     }
 }
     </script>
